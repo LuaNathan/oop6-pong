@@ -1,32 +1,29 @@
-package com.neumont.csc150.pong.view;
+package ui;
 
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
+import java.io.File;
+import java.io.IOException;
 
-import com.neumont.csc150.pong.controller.PongGame;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 public class GamePanel extends JPanel implements ActionListener, MouseListener, MouseMotionListener, KeyListener {
 	private static final long serialVersionUID = 1L;
-	private PongGame game;
 	
-	private int WINDOW_X;
-	private int WINDOW_Y;
+	private int WINDOW_X = 800;
+	private int WINDOW_Y = 800;
 	
-	Point ballPosition;
-	Point leftPaddlePosition;
-	Point rightPaddlePosition;
+	private int paddleSizeX = 20;
+	private int paddleSizeY = 60;
 	
-//	private int paddleSizeX = 20;
-//	private int paddleSizeY = 60;
-//	
-//	private final int paddlePositionOffset = 50;
-//	
-//	private int paddle1Y = (WINDOW_Y / 2) - (paddleSizeY / 2);
-//	private int paddle2Y = (WINDOW_Y / 2) - (paddleSizeY / 2);
-//	
-//	private int paddle1X = paddlePositionOffset;
-//	private int paddle2X = ((WINDOW_X - paddleSizeX) - paddlePositionOffset);
+	private final int paddlePositionOffset = 50;
+	
+	private int paddle1Y = (WINDOW_Y / 2) - (paddleSizeY / 2);
+	private int paddle2Y = (WINDOW_Y / 2) - (paddleSizeY / 2);
+	
+	private int paddle1X = paddlePositionOffset;
+	private int paddle2X = ((WINDOW_X - paddleSizeX) - paddlePositionOffset);
 	
 	private int p1Move = 0;
 	private int p2Move = 0;
@@ -34,15 +31,14 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
 	private int player1Delta = 4;
 	private int player2Delta = 3;
 	
+	private int player1Score = 0; // The score for player 1
+	private int player2Score = 0; // The score of player 2
+	
+	private Image paddleImg;
+	
 	private Timer timer = new Timer(10, this);
 	
 	public GamePanel(int x, int y) {
-		WINDOW_X = x;
-		WINDOW_Y = y;
-		ballPosition = new Point(WINDOW_X/2, WINDOW_Y/2);
-		leftPaddlePosition = new Point(WINDOW_X/8, WINDOW_Y/2-30);
-		rightPaddlePosition = new Point(WINDOW_X-100, WINDOW_Y/2-30);
-		game = new PongGame();
 		this.addKeyListener(this);
 		timer.start();
 	}
@@ -51,12 +47,23 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
 	public void paint(Graphics g) {
 		super.paint(g);
 		this.setBackground(Color.BLACK);
+		
 		g.setColor(Color.WHITE);
-		g.fillRect(leftPaddlePosition.x, leftPaddlePosition.y,
-				game.getLeftPaddle().getWidth(), game.getLeftPaddle().getHeight());
-		g.fillRect(rightPaddlePosition.x, rightPaddlePosition.y, 
-				game.getRightPaddle().getWidth(), game.getRightPaddle().getHeight());
-		g.fillOval(ballPosition.x, ballPosition.y, game.getB().getSize(), game.getB().getSize());
+		
+		g.drawLine(WINDOW_X / 2, 0, WINDOW_X / 2, WINDOW_Y); // Line in the middle of the game board
+		
+		try {
+			paddleImg = ImageIO.read(new File("img/Paddle_IMG.png"));
+		} catch (IOException e) {
+			// RIP
+		}
+		
+		g.setFont(new Font("Courier Regular", Font.PLAIN, 30));
+		g.drawString(Integer.toString(player1Score), (WINDOW_X / 2) - 50, 50); // Player 1 score
+		g.drawString(Integer.toString(player2Score), (WINDOW_X / 2) + 50, 50); // Player 2 score
+		
+		g.drawImage(paddleImg, paddle1X, paddle1Y, Color.BLACK, null); // Paddle 1
+		g.drawImage(paddleImg, paddle2X, paddle2Y, Color.BLACK, null); // Paddle 2
 	}
 
 	@Override
@@ -90,36 +97,37 @@ public class GamePanel extends JPanel implements ActionListener, MouseListener, 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		requestFocus(); // requesting focus for key events
+		
 		if (p1Move == -1) {
-			this.leftPaddlePosition.y -= game.getLeftPaddle().getyDelta();
+			this.paddle1Y -= player1Delta;
 		}
 		else if (p1Move == 1) {
-			this.leftPaddlePosition.y += game.getLeftPaddle().getyDelta();
+			this.paddle1Y += player1Delta;
 		}
 		
 		if (p2Move == -1) {
-			this.rightPaddlePosition.y -= game.getRightPaddle().getyDelta();
+			this.paddle2Y -= player2Delta;
 		}
 		else if (p2Move == 1) {
-			this.rightPaddlePosition.y += game.getRightPaddle().getyDelta();
+			this.paddle2Y += player2Delta;
 		}
 		
 		// Collision for paddle 1
-		if (this.leftPaddlePosition.y >= (WINDOW_Y - this.leftPaddlePosition.y)) {
-			this.leftPaddlePosition.y -= this.player1Delta;
+		if (this.paddle1Y >= (WINDOW_Y - this.paddleSizeY)) {
+			this.paddle1Y -= this.player1Delta;
 		}
 		
-		if (this.leftPaddlePosition.y <= 0) {
-			this.leftPaddlePosition.y += this.player1Delta;
+		if (this.paddle1Y <= 0) {
+			this.paddle1Y += this.player1Delta;
 		}
 		
 		// Collision for paddle 2
-		if (this.rightPaddlePosition.y >= (WINDOW_Y - this.rightPaddlePosition.y)) {
-			this.rightPaddlePosition.y -= this.player2Delta;
+		if (this.paddle2Y >= (WINDOW_Y - this.paddleSizeY)) {
+			this.paddle2Y -= this.player2Delta;
 		}
 		
-		if (this.rightPaddlePosition.y <= 0) {
-			this.rightPaddlePosition.y += this.player2Delta;
+		if (this.paddle2Y <= 0) {
+			this.paddle2Y += this.player2Delta;
 		}
 		
 		this.repaint();
